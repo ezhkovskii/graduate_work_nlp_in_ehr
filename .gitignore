@@ -1,0 +1,12 @@
+venv
+clean_text.txt
+epicrises_text.csv
+__pycache__
+*.pyc
+*.pyo
+*$py.class
+.vscode
+epicrises
+
+# Jupyter Notebook
+.ipynb_checkpoints
