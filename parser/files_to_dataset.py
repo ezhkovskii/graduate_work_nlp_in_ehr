@@ -3,7 +3,7 @@ import logging
 
 import pandas as pd
 
-from parse_epicrise import EpicriseHTML
+from parse_epicrise import EpicriseHTML, EpicriseType
 
 PATH_EPICRISES = "./epicrises/"
 
@@ -11,7 +11,7 @@ PATH_EPICRISES = "./epicrises/"
 def skip(html_doc: str) -> bool:
     
     # Проверка на этапный эпикриз
-    if EpicriseHTML.TYPES_EPICRISES[2] in html_doc:
+    if EpicriseType.stage.value in html_doc:
         return True
     
     return False
