@@ -10,3 +10,6 @@ epicrises
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
+
+*.bak
