@@ -23,6 +23,7 @@ Complaint = fact(
 
 temperature = copy(complaints['temperature'])
 complaints.pop('temperature', None)
+complaints.pop('temperature_value', None)
 
 complaint_pipelines = []
 for complaint, synonyms in complaints.items():

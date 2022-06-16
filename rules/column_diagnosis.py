@@ -115,7 +115,7 @@ FORMS = or_(
 )
 
 MAIN_DIAGNOSIS = or_(
-    DISEASES,
+    DISEASES_FOR_MAIN,
     FORMS,
     VIRUS
 ).interpretation(
@@ -147,7 +147,7 @@ RESPIRATORY_FAILURE = rule(
     not_(eq(AMOUNT)).optional()
 )
 
-СOMPLICATION_DIAGNOSIS =  or_(
+СOMPLICATION_DIAGNOSIS = or_(
         DISEASES_FOR_COMPLICATION,    
         FORMS,
         RESPIRATORY_FAILURE

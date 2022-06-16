@@ -7,6 +7,8 @@ __pycache__
 *$py.class
 .vscode
 epicrises
+.idea
+epicrises_extract.xlsx
 
 # Jupyter Notebook
 .ipynb_checkpoints

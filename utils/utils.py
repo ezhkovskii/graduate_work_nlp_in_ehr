@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict
 from collections import defaultdict
 
 from pymorphy2.shapes import is_roman_number
@@ -8,15 +8,14 @@ from yargy import (
 )
 from IPython.display import display
 
-
 ROMAN = {
-    'I':1,
-    'V':5,
-    'X':10,
-    'L':50,
-    'C':100,
-    'D':500,
-    'M':1000
+    'I': 1,
+    'V': 5,
+    'X': 10,
+    'L': 50,
+    'C': 100,
+    'D': 500,
+    'M': 1000
 }
 
 
@@ -26,11 +25,11 @@ def roman_to_int(S: str) -> Optional[int]:
     """
     if is_roman_number(S):
         summ = 0
-        for i in range(len(S)-1, -1, -1):
+        for i in range(len(S) - 1, -1, -1):
             num = ROMAN[S[i]]
-            if 3 * num < summ: 
+            if 3 * num < summ:
                 summ = summ - num
-            else: 
+            else:
                 summ = summ + num
         return summ
 
@@ -52,11 +51,11 @@ def show_matches(rule, *lines):
                 facts = [_.fact for _ in matches]
                 if len(facts) == 1:
                     facts = facts[0]
-                display(facts)            
+                display(facts)
         except Exception as e:
             print(f'Строка: {line}.\n {e} \n{list(matches)}')
             raise
-           
+
 
 def join_spans(text, spans):
     spans = sorted(spans)
@@ -86,9 +85,12 @@ class Extractor:
         return Match(facts, spans)
 
 
-def update(main, fact, feature=None):
+def update(main, fact, features=None):
+    if features is None:
+        features = []
+
     for key, value in fact.items():
-        if key == feature:
+        if key in features:
             main[key].append(value)
         else:
             main[key] = value
@@ -103,7 +105,17 @@ def show_matches_extractor(rule, *lines):
             main_fact = defaultdict(list)
             for fact in match.facts:
                 fact_json = fact.as_json
+                print(fact_json)
                 update(main_fact, fact_json, 'diseases')
             print(main_fact)
-            print()
-            
+
+
+def matches_extractor(extractor: Extractor, text: str) -> List[Dict]:
+    main_fact = []
+    match = extractor(text)
+    if match.facts:
+        for fact in match.facts:
+            fact_json = fact.as_json
+            main_fact.append(fact_json)
+
+    return main_fact
