@@ -1,46 +1,74 @@
 from datetime import datetime
+from typing import List, Dict
 
 import pandas as pd
 
 from extraction.extraction_diagnosis import ExtractionDiagnosis
 from extraction.extraction_complaint import ExtractionComplaints
+from extraction.extraction_anamnesis import ExtractionAnamnesis
+
+COUNT_ROWS = 2346
 
 
-COUNT_ROWS = 100
+def load_dataset() -> pd.DataFrame:
+    """
+    Загрузка датасета
+    """
+    df = pd.read_csv('epicrises_text.csv')
+    df = df.fillna('')
+    return df
+
+
+def add_id(df_id: pd.Series, df_facts: List[pd.DataFrame]) -> None:
+    """
+    Добавление колонки id в датасеты
+    """
+    for df in df_facts:
+        df['id'] = df_id
+
+
+def create_excel(sheets: Dict, name: str) -> None:
+    """
+    Создание файла excel с несколькими листами sheets
+    """
+    writer = pd.ExcelWriter(name, engine='xlsxwriter')
+    for sheet_name in sheets.keys():
+        sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+    writer.save()
 
 
 if __name__ == "__main__":
     print(f'Запуск. Обработка текстов - {COUNT_ROWS} шт.')
     start_time = datetime.now()
 
-    df = pd.read_csv('epicrises_text.csv')
-    df_clean = df.copy()
-    df_clean = df_clean.fillna('')
+    df = load_dataset()
+    df['id'] = list(range(1, len(df) + 1))
+    df_id = df.id.copy()
 
-    df_filename = df_clean.filename.copy()
-
-    df_diagnosis = list(df_clean.diagnosis.copy())[:COUNT_ROWS]
+    print('Обработка колонки diagnosis')
+    df_diagnosis = list(df.diagnosis.copy())[:COUNT_ROWS]
     extraction = ExtractionDiagnosis(df_diagnosis)
     df_facts_main, df_facts_complication, df_facts_concomitant = extraction()
 
-    df_complaint = list(df_clean.complaint.copy())[:COUNT_ROWS]
+    print('Обработка колонки complaint')
+    df_complaint = list(df.complaint.copy())[:COUNT_ROWS]
     extraction = ExtractionComplaints(df_complaint)
     df_facts_complaint = extraction()
 
-    for df_facts in (df_facts_main, df_facts_complication, df_facts_concomitant, df_facts_complaint):
-        df_facts['filename'] = df_filename
+    print('Обработка колонки anamnesis')
+    df_anamnesis = list(df.anamnesis.copy())[:COUNT_ROWS]
+    extraction = ExtractionAnamnesis(df_anamnesis)
+    df_facts_anamnesis = extraction()
 
     sheets = {
         'Main': df_facts_main,
         'Complication': df_facts_complication,
         'Concomitant': df_facts_concomitant,
-        'Complaint': df_facts_complaint
-        }
+        'Complaint': df_facts_complaint,
+        'Anamnesis': df_facts_anamnesis
+    }
+    add_id(df_id, sheets.values())
 
-    writer = pd.ExcelWriter('epicrises_extract.xlsx', engine='xlsxwriter')
-    for sheet_name in sheets.keys():
-        sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
-    writer.save()
+    create_excel(sheets, 'epicrises_extract.xlsx')
 
-    print('Готово')
-    print(f'Время выполнения: {datetime.now() - start_time}')
+    print(f'Готово. Время выполнения: {datetime.now() - start_time}')

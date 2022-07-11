@@ -1,3 +1,7 @@
+"""
+Извлечение информации из колонки diagnosis
+"""
+
 from typing import List, Tuple, Dict
 from collections import namedtuple, defaultdict
 import re
@@ -12,7 +16,11 @@ from rules.column_diagnosis import MAIN_DIAGNOSIS, СOMPLICATION_DIAGNOSIS, CONC
 
 
 class ExtractionDiagnosis:
-
+    """
+    Класс для извлечения основного диагноза, осложнений и сопутствующих болезней.
+    Предобработка, разделение текста диагноза на основной, осложнение и сопутствующий.
+    Извлечение из трех разделов информации тремя процессами.
+    """
     def __init__(self, diagnosis: List[str]) -> None:
         self.diagnosis = diagnosis
 
@@ -31,10 +39,13 @@ class ExtractionDiagnosis:
         return df_facts_main, df_facts_complication, df_facts_concomitant
     
     def preprocessing(self) -> List[str]:
+        """
+        Предобработка текста
+        """
         for index in range(len(self.diagnosis)):
             if 'U07.2' in self.diagnosis[index]:
                 find_diagnosis = self.diagnosis[index].find('U07.2')
-                self.diagnosis[index] = self.diagnosis[index][:find_diagnosis + 5] + ' ' +  self.diagnosis[index][find_diagnosis + 5:]
+                self.diagnosis[index] = self.diagnosis[index][:find_diagnosis + 5] + ' ' + self.diagnosis[index][find_diagnosis + 5:]
                 
             if 'среднетяжелая' in self.diagnosis[index]:
                 self.diagnosis[index] = self.diagnosis[index].replace('среднетяжелая', 'средне-тяжелая')
@@ -45,6 +56,10 @@ class ExtractionDiagnosis:
 
     @staticmethod
     def split_texts(clean_texts: List[str]) -> Tuple[List[str], List[str], List[str]]:
+        """
+        Разделение колонки diagnosis на подразделы
+        Основной, Осложение и Сопутствующий
+        """
         Diagnosis_text = namedtuple('Diagnosis', 'ind main complication concomitant', defaults=[None, '', '', ''])
         split_text = []
         for ind, text in enumerate(clean_texts):
@@ -66,73 +81,98 @@ class ExtractionDiagnosis:
 
     @staticmethod
     def extract_main_diagnosis(texts: List[str], return_dict: Dict) -> None:
+        """
+        Извлечение из основного подраздела
+        """
         extractor = Extractor(MAIN_DIAGNOSIS)
         facts = []
         for text in texts:
-            facts_by_text = matches_extractor(extractor, text)
-            main_fact = defaultdict(list)
-            for fact in facts_by_text:
-                update(main_fact, fact, ['diseases'])
+            try:
+                facts_by_text = matches_extractor(extractor, text)
+                main_fact = defaultdict(list)
+                for fact in facts_by_text:
+                    update(main_fact, fact, ['diseases'])
 
-            if main_fact.get('form'):
-                new_form = str(main_fact['form']['start'])
-                if main_fact['form'].get('stop'):
-                    new_form += f"-{str(main_fact['form']['stop'])}"
-                main_fact['form'] = new_form
+                if main_fact.get('form'):
+                    new_form = str(main_fact['form']['start'])
+                    if main_fact['form'].get('stop'):
+                        new_form += f"-{str(main_fact['form']['stop'])}"
+                    main_fact['form'] = new_form
+            except Exception:
+                print(f'Text: {text}\nFacts: {facts_by_text}\nDict: {main_fact}')
+                raise
 
             facts.append(main_fact)
 
         return_dict['facts_main'] = facts
-        #return facts
 
     @staticmethod
     def extract_complication_diagnosis(texts: List[str], return_dict: Dict) -> None:
+        """
+        Осложнение
+        """
         extractor = Extractor(СOMPLICATION_DIAGNOSIS)
         facts = []
         for text in texts:
-            facts_by_text = matches_extractor(extractor, text)
-            main_fact = defaultdict(list)
-            for fact in facts_by_text:
-                update(main_fact, fact, ['diseases'])
+            try:
+                facts_by_text = matches_extractor(extractor, text)
+                main_fact = defaultdict(list)
+                for fact in facts_by_text:
+                    update(main_fact, fact, ['diseases'])
 
-            if main_fact.get('form'):
-                new_form = str(main_fact['form']['start'])
-                if main_fact['form'].get('stop'):
-                    new_form += f"-{str(main_fact['form']['stop'])}"
-                main_fact['form'] = new_form
+                if main_fact.get('form'):
+                    new_form = str(main_fact['form']['start'])
+                    if main_fact['form'].get('stop'):
+                        new_form += f"-{str(main_fact['form']['stop'])}"
+                    main_fact['form'] = new_form
 
-            if main_fact.get('respiratory_failure'):
-                value = main_fact['respiratory_failure']['value']
-                if isinstance(value, int):
-                    respiratory_failure = str(value)
-                elif isinstance(value, dict):
-                    respiratory_failure = str(value['start'])
-                    respiratory_failure += f"-{str(value['stop'])}"
-                else:
-                    raise ValueError(f"respiratory_failure type: {type(value)}, value: {value}")
+                if main_fact.get('respiratory_failure'):
+                    value = main_fact['respiratory_failure']['value']
+                    if isinstance(value, int):
+                        respiratory_failure = str(value)
+                    elif isinstance(value, dict):
+                        respiratory_failure = str(value['start'])
+                        respiratory_failure += f"-{str(value['stop'])}"
+                    else:
+                        respiratory_failure = None
+                        #raise ValueError(f"respiratory_failure type: {type(value)}, value: {value}")
+                        print(f'Ошибка. respiratory_failure type: {type(value)}, value: {value}')
+                        print(f'Text: {text}\nFacts: {facts_by_text}\nDict: {main_fact}')
 
-                main_fact['respiratory_failure'] = respiratory_failure
+                    main_fact['respiratory_failure'] = respiratory_failure
+            except Exception:
+                print(f'Text: {text}\nFacts: {facts_by_text}\nDict: {main_fact}')
+                raise
 
             facts.append(main_fact)
 
         return_dict['facts_complication'] = facts
-        #return facts
 
     @staticmethod
     def extract_concomitant_diagnosis(texts: List[str], return_dict: Dict) -> None:
+        """
+        Сопутствующий
+        """
         extractor = Extractor(CONCOMITANT_DIAGNOSIS)
         facts = []
         for text in texts:
-            facts_by_text = matches_extractor(extractor, text)
-            main_fact = defaultdict(list)
-            for fact in facts_by_text:
-                update(main_fact, fact, ['diseases', 'info'])
+            try:
+                facts_by_text = matches_extractor(extractor, text)
+                main_fact = defaultdict(list)
+                for fact in facts_by_text:
+                    update(main_fact, fact, ['diseases', 'info'])
+            except Exception:
+                print(f'Text: {text}\nFacts: {facts_by_text}\nDict: {main_fact}')
+                raise
+
             facts.append(main_fact)
 
         return_dict['facts_concomitant'] = facts
-        #return facts
     
     def get_facts(self, texts: Tuple) -> Tuple[Dict, Dict, Dict]:
+        """
+        Запуск извлечения информации из текстов
+        """
         return_dict = Manager().dict()
         jobs = []
         funcs = (self.extract_main_diagnosis, self.extract_complication_diagnosis, self.extract_concomitant_diagnosis)

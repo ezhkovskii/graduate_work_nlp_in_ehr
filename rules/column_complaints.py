@@ -1,3 +1,7 @@
+"""
+Правила для извлечения информации из колонки сomplaint
+"""
+
 import json
 from copy import copy
 
@@ -12,7 +16,7 @@ from yargy.interpretation import fact
 
 from .consts import  AMOUNT
 
-
+# Загрузка жалоб из файла
 with open('data/complaints.json', encoding='utf-8') as f:
     complaints = json.load(f)
     
@@ -21,6 +25,7 @@ Complaint = fact(
     list(complaints.keys())
 )
 
+# Температуру извлекаем отдельно
 temperature = copy(complaints['temperature'])
 complaints.pop('temperature', None)
 complaints.pop('temperature_value', None)
@@ -31,6 +36,7 @@ for complaint, synonyms in complaints.items():
         rule(morph_pipeline(synonyms)).interpretation(getattr(Complaint, complaint).normalized()).interpretation(Complaint)
     )
 
+# Извлекаем значение температуры, если оно есть
 temperature_pipeline = morph_pipeline(temperature)
 TEMPERATURE = or_(
     # rule(

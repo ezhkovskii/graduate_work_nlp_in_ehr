@@ -26,7 +26,7 @@ def roman_to_int(S: str) -> Optional[int]:
     if is_roman_number(S):
         summ = 0
         for i in range(len(S) - 1, -1, -1):
-            num = ROMAN[S[i]]
+            num = ROMAN.get(S[i].upper())
             if 3 * num < summ:
                 summ = summ - num
             else:
@@ -110,9 +110,11 @@ def show_matches_extractor(rule, *lines):
             print(main_fact)
 
 
-def matches_extractor(extractor: Extractor, text: str) -> List[Dict]:
+def matches_extractor(extractor: Extractor, text: str, show = False) -> List[Dict]:
     main_fact = []
     match = extractor(text)
+    if show:
+        show_markup(text, match.spans)
     if match.facts:
         for fact in match.facts:
             fact_json = fact.as_json

@@ -9,7 +9,9 @@ PATH_EPICRISES = "./epicrises/"
 
 
 def skip(html_doc: str) -> bool:
-    
+    """
+    Пропускаем файл, если он не подходит
+    """
     # Проверка на этапный эпикриз
     if EpicriseType.stage.value in html_doc:
         return True

@@ -1,3 +1,7 @@
+"""
+Правила для извлечения информации из колонки diagnosis
+"""
+
 from typing import Optional
 
 from yargy import (
@@ -13,7 +17,7 @@ import pymorphy2
 
 from .consts import Range, AMOUNT
 
-
+# Загрузка диагнозов из файла
 with open('data\\diseases_сustom.txt', encoding='utf-8') as f:
     diseases = f.read()
     diseases = diseases.split('\n')
@@ -32,6 +36,7 @@ MainDiagnosis = fact(
     ['form', 'virus', 'diseases']
 )
 
+# Варианты подтверждения коронавируса
 virus_identified = (
     'идентифицирован',
     'подтвержденная',
@@ -42,6 +47,7 @@ VIRUS_IDENTIFIED = morph_pipeline(
     virus_identified
 ).interpretation(MainDiagnosis.virus.const(True))
 
+# Варианты отрицания коронавируса
 virus_not_identified = (
     'не идентифицирован',
     'неидентифицирован',
@@ -67,6 +73,7 @@ VIRUS = or_(
 # Правило для поиска заболеваний
 DISEASES_FOR_MAIN = DISEASES.interpretation(MainDiagnosis.diseases)
 
+# Форма коронавируса
 Forms_dict = {
     'легкий': 1,
     'лёгкий': 1,
@@ -92,6 +99,7 @@ def forms_morph(form: str) -> Optional[int]:
     print(f'НЕ НАЙДЕНА НОРМАЛЬНАЯ ФОРМА. word: {form}, forms: {normal_forms}')
     return None
 
+# Правило нахождения форм интервалов вида средне-тяжелая или легко-средняя
 FORM_RANGE = rule(
         Forms.interpretation(Range.start.normalized().custom(forms_morph)),
         not_(eq(Forms)).optional(),
@@ -114,6 +122,7 @@ FORMS = or_(
     MainDiagnosis.form
 )
 
+# Правило для нахождения основного диагноза
 MAIN_DIAGNOSIS = or_(
     DISEASES_FOR_MAIN,
     FORMS,
@@ -140,6 +149,7 @@ FORMS = or_(
 
 DN = morph_pipeline(['дн', 'дыхательная недостаточность'])
 
+# Правило для извлечения дыхательной недостаточности вида ДН I-II или ДН 0-I-II
 RESPIRATORY_FAILURE = rule(
     DN,
     not_(eq(AMOUNT)).optional(), 
@@ -147,6 +157,7 @@ RESPIRATORY_FAILURE = rule(
     not_(eq(AMOUNT)).optional()
 )
 
+# Правило для извлечения из подраздела Осложнение
 СOMPLICATION_DIAGNOSIS = or_(
         DISEASES_FOR_COMPLICATION,    
         FORMS,
@@ -162,6 +173,8 @@ ConcomitantDiagnosis = fact(
 
 DISEASES_FOR_CONCOMITANT = DISEASES.interpretation(ConcomitantDiagnosis.diseases)
 
+# Правило для подраздела Сопутствующий
+# Извлекаются болезни и информация о них
 CONCOMITANT_DIAGNOSIS = or_(
     rule(
         DISEASES_FOR_CONCOMITANT

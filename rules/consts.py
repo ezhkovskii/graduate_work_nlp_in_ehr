@@ -1,3 +1,8 @@
+"""
+Константы и правила для извлечения чисел из текста.
+Извлекаются float, integer, roman, intervals.
+"""
+
 import re
 
 from yargy.predicates import (

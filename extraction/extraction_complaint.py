@@ -1,3 +1,7 @@
+"""
+Извлечение информации из колонки с жалобами complaints
+"""
+
 from typing import List, Tuple, Dict
 from collections import namedtuple, defaultdict
 import re
@@ -12,7 +16,6 @@ from rules.column_complaints import COMPLAINT, complaints
 
 
 class ExtractionComplaints:
-
     def __init__(self, texts: List[str]):
         self.texts = texts
         self.extractor = Extractor(COMPLAINT)
@@ -28,7 +31,7 @@ class ExtractionComplaints:
 
         return df_facts
 
-    def get_facts(self, texts: List[str]) -> None:
+    def get_facts(self, texts: List[str]) -> List:
         facts = []
         for text in texts:
             main_fact = self.extraction_fact(text)
@@ -36,23 +39,27 @@ class ExtractionComplaints:
 
         return facts
 
-    def extraction_fact(self, text: str):
-        facts_by_text = matches_extractor(self.extractor, text)
-        main_fact = defaultdict(list)
-        for fact in facts_by_text:
-            update(main_fact, fact)
+    def extraction_fact(self, text: str) -> Dict:
+        try:
+            facts_by_text = matches_extractor(self.extractor, text)
+            main_fact = defaultdict(list)
+            for fact in facts_by_text:
+                update(main_fact, fact)
 
-        if main_fact.get('temperature') and isinstance(main_fact['temperature'], dict):
-            if isinstance(main_fact['temperature']['value'], dict):
-                aver = (main_fact['temperature']['value']['start'] + main_fact['temperature']['value']['stop']) / 2
-                main_fact['temperature_value'] = str(aver)
-            else:
-                main_fact['temperature_value'] = str(main_fact['temperature']['value'])
-            main_fact['temperature'] = True
+            if main_fact.get('temperature') and isinstance(main_fact['temperature'], dict):
+                if isinstance(main_fact['temperature']['value'], dict):
+                    aver = (main_fact['temperature']['value']['start'] + main_fact['temperature']['value']['stop']) / 2
+                    main_fact['temperature_value'] = str(aver)
+                else:
+                    main_fact['temperature_value'] = str(main_fact['temperature']['value'])
+                main_fact['temperature'] = True
 
-        for key in main_fact.keys():
-            if key not in ('temperature_value',):
-                main_fact[key] = True
+            for key in main_fact.keys():
+                if key not in ('temperature_value',):
+                    main_fact[key] = True
+        except Exception:
+            print(f'Text: {text}\nFacts: {facts_by_text}\nDict: {main_fact}')
+            raise
 
         return main_fact
 

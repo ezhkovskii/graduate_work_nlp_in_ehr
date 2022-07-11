@@ -1,14 +1,19 @@
 venv
+
 clean_text.txt
 epicrises_text.csv
+filename_id.csv
+epicrises_extract.xlsx
+epicrises
+
 __pycache__
 *.pyc
 *.pyo
 *$py.class
 .vscode
-epicrises
+
 .idea
-epicrises_extract.xlsx
+
 
 # Jupyter Notebook
 .ipynb_checkpoints
