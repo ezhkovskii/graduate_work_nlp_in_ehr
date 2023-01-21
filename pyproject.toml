@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "graduate"
+version = "0.1.0"
+description = "Выпускная квалификационная работа магистратуры. Анализ и структурирование текстовых данных медицинских эпикризов."
+authors = ["Alexander Ezhkov <ezhkovskii@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+beautifulsoup4 = "^4.11.1"
+notebook = "^6.5.2"
+yargy = "^0.15.1"
+ipymarkup = "^0.9.0"
+pandas = "^1.5.3"
+xlsxwriter = "^3.0.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

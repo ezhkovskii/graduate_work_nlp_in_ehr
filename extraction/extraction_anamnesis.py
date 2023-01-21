@@ -12,11 +12,14 @@ from rules.column_anamnesis import ANAMNESIS
 
 
 class ExtractionAnamnesis:
+    """
+    Класс для извлечение информации из раздела anamnesis
+    """
     def __init__(self, texts: List[str]) -> None:
         self.texts = texts
         self.extractor = Extractor(ANAMNESIS)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> pd.DataFrame:
         clean_texts = self.preprocessing()
         facts = self.get_facts(clean_texts)
         df_facts = pd.DataFrame(facts)
@@ -24,6 +27,9 @@ class ExtractionAnamnesis:
         return df_facts
 
     def preprocessing(self) -> List[str]:
+        """
+        Предобработка текста
+        """
         for index in range(len(self.texts)):
             if 'Состояние' in self.texts[index]:
                 find_texts = self.texts[index].find('Состояние')
@@ -34,6 +40,9 @@ class ExtractionAnamnesis:
 
     @staticmethod
     def show_extract(texts: List[str]) -> None:
+        """
+        Вывод в консоль найденных сущностей (найденных лекарств и жалоб) в разделе анамнезе
+        """
         extractor = Extractor(ANAMNESIS)
         for text in texts:
             facts_by_text = matches_extractor(extractor, text, True)
@@ -43,6 +52,9 @@ class ExtractionAnamnesis:
             print(dict(main_fact))
 
     def extraction_fact(self, text: str) -> Dict:
+        """
+        Извлечение найденных найденных сущностей  (лекарств и жалоб) из раздела анамнеза
+        """
         try:
             facts_by_text = matches_extractor(self.extractor, text)
             main_fact = defaultdict(list)
@@ -54,7 +66,10 @@ class ExtractionAnamnesis:
 
         return main_fact
 
-    def get_facts(self, texts: List[str]) -> Dict:
+    def get_facts(self, texts: List[str]) -> List:
+        """
+        Возвращает список найденных сущностей из раздела анамнеза
+        """
         facts = [self.extraction_fact(text) for text in texts]
 
         return facts
